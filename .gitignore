@@ -1,0 +1,8 @@
+# Compiled AutoLISP
+*.fas
+*.vlx
+
+# Editor backups (VLIDE writes *._ls)
+*._ls
+*.bak
+*~
