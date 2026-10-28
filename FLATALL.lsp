@@ -424,28 +424,41 @@
   (if tail
     (append (reverse out) block tail)))
 
-;; Copy embedded pattern data, then read it back for verification.
+;; Verify SOLID fills separately from patterned hatches.
 (defun FH:copy-pattern (source target / sd td block new check)
-  (setq sd    (entget source)
-        td    (entget target)
-        block (FH:pattern sd))
-  (if (and block
-           (assoc 2 sd)
-           (assoc 70 sd)
-           (setq new (FH:splice td block)))
-    (progn
-      (setq new
-        (subst (assoc 2 sd) (assoc 2 new) new))
-      (setq new
-        (subst (assoc 70 sd) (assoc 70 new) new))
-      (if (entmod new)
-        (progn
-          (entupd target)
-          (setq check (entget target))
-          (and
-            (equal (assoc 2 sd) (assoc 2 check))
-            (equal (assoc 70 sd) (assoc 70 check))
-            (equal block (FH:pattern check) 1e-12)))))))
+  (setq sd (entget source)
+        td (entget target))
+  (cond
+    ;; SOLID: verify fill type and flat geometry.
+    ;; No pattern-definition comparison is needed.
+    ((= 1 (cdr (assoc 70 sd)))
+     (and
+       (= 1 (cdr (assoc 70 td)))
+       (member (strcase (cdr (assoc 2 td))) '("SOLID" "_SOLID"))
+       (not (= 1 (cdr (assoc 450 td))))
+       (equal (FA:nrm td) (FA:nn (FA:nrm td)) 1e-14)
+       (equal (cadddr (assoc 10 td)) 0.0 1e-12)))
+
+    ;; Patterned hatch: copy embedded pattern data, then read it back.
+    (T
+     (setq block (FH:pattern sd))
+     (if (and block
+              (assoc 2 sd)
+              (assoc 70 sd)
+              (setq new (FH:splice td block)))
+       (progn
+         (setq new
+           (subst (assoc 2 sd) (assoc 2 new) new))
+         (setq new
+           (subst (assoc 70 sd) (assoc 70 new) new))
+         (if (entmod new)
+           (progn
+             (entupd target)
+             (setq check (entget target))
+             (and
+               (equal (assoc 2 sd) (assoc 2 check))
+               (equal (assoc 70 sd) (assoc 70 check))
+               (equal block (FH:pattern check) 1e-12)))))))))
 
 (defun c:FLATHATCH (/ *error* oce ohp ss i h hd nrm last bnd j nh n skip fail)
   (setq oce (getvar "CMDECHO") ohp (getvar "HPASSOC"))
