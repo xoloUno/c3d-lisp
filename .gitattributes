@@ -1,3 +1,6 @@
 # Keep LF line endings, which is how these files have always been saved.
 # Without this, Git for Windows (core.autocrlf=true) would rewrite them to CRLF on checkout.
 * text=auto eol=lf
+
+# cmd.exe can misparse batch files with LF endings.
+*.cmd text eol=crlf
