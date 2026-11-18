@@ -9,3 +9,6 @@
 
 # Local publish target; kept out of the public repo
 .publish-target
+
+# Usage logs from the loader; they contain login names
+Logs/
